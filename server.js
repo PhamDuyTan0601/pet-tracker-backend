@@ -43,4 +43,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
 
+app.use(express.static("public"));
+app.get("/web", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
+});
 module.exports = app;
