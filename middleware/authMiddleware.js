@@ -3,12 +3,6 @@ const mongoose = require("mongoose");
 
 const auth = async (req, res, next) => {
   try {
-    console.log("=== AUTH DEBUG ===");
-    console.log("All headers:", req.headers);
-    console.log("All query params:", req.query);
-    console.log("All body data:", req.body);
-
-    // Nhận userId từ nhiều nguồn
     let userId =
       req.headers.userId ||
       req.headers.userid ||
@@ -16,20 +10,17 @@ const auth = async (req, res, next) => {
       req.query.userId ||
       req.body.userId;
 
-    console.log("Extracted userId:", userId);
-
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message:
-          "Authentication required. Please provide user ID in headers, query, or body",
+        message: "Authentication required. Please provide user ID",
       });
     }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(401).json({
         success: false,
-        message: "Invalid user ID format: " + userId,
+        message: "Invalid user ID format",
       });
     }
 
@@ -37,11 +28,10 @@ const auth = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "User not found with ID: " + userId,
+        message: "User not found",
       });
     }
 
-    console.log("Authentication successful for user:", user.name);
     req.user = user;
     next();
   } catch (error) {

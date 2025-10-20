@@ -33,6 +33,25 @@ const petSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Owner ID is required"],
     },
+    bluetoothDevice: {
+      macAddress: {
+        type: String,
+        sparse: true,
+        uppercase: true,
+      },
+      deviceName: String,
+      isPaired: {
+        type: Boolean,
+        default: false,
+      },
+      pairedAt: Date,
+    },
+    deviceInfo: {
+      firmwareVersion: String,
+      hardwareModel: String,
+      lastSeen: Date,
+      signalStrength: Number,
+    },
     description: {
       type: String,
       maxlength: [500, "Description cannot be more than 500 characters"],
@@ -63,7 +82,7 @@ const petSchema = new mongoose.Schema(
           lat: Number,
           lng: Number,
         },
-        radius: Number, // in meters
+        radius: Number,
         isActive: Boolean,
       },
     ],
@@ -73,43 +92,56 @@ const petSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster queries
 petSchema.index({ owner: 1 });
 petSchema.index({ species: 1 });
 petSchema.index({ isActive: 1 });
+petSchema.index({ "bluetoothDevice.macAddress": 1 });
 
-// Virtual for pet's age in years
-petSchema.virtual("ageInYears").get(function () {
-  return this.age;
-});
-
-// Virtual for pet's age in months
-petSchema.virtual("ageInMonths").get(function () {
-  return this.age * 12;
-});
-
-// Method to update last seen
 petSchema.methods.updateLastSeen = function () {
   this.lastSeen = new Date();
   return this.save();
 };
 
-// Static method to find pets by owner
+petSchema.methods.pairBluetoothDevice = function (
+  macAddress,
+  deviceName,
+  deviceInfo = {}
+) {
+  this.bluetoothDevice = {
+    macAddress: macAddress.toUpperCase(),
+    deviceName: deviceName || `PET_${this.name.toUpperCase()}`,
+    isPaired: true,
+    pairedAt: new Date(),
+  };
+
+  this.deviceInfo = {
+    ...this.deviceInfo,
+    ...deviceInfo,
+    lastSeen: new Date(),
+  };
+
+  return this.save();
+};
+
+petSchema.methods.unpairBluetoothDevice = function () {
+  this.bluetoothDevice = {
+    macAddress: null,
+    deviceName: null,
+    isPaired: false,
+    pairedAt: null,
+  };
+  return this.save();
+};
+
 petSchema.statics.findByOwner = function (ownerId) {
   return this.find({ owner: ownerId, isActive: true }).sort({ createdAt: -1 });
 };
 
-// Static method to find active pets
-petSchema.statics.findActive = function () {
-  return this.find({ isActive: true });
+petSchema.statics.findByMacAddress = function (macAddress) {
+  return this.findOne({
+    "bluetoothDevice.macAddress": macAddress.toUpperCase(),
+    isActive: true,
+  });
 };
-
-// Middleware to update lastSeen when petData is added
-petSchema.pre("save", function (next) {
-  if (this.isModified("lastSeen")) {
-    this.lastSeen = new Date();
-  }
-  next();
-});
 
 module.exports = mongoose.model("Pet", petSchema);

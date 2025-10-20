@@ -2,11 +2,10 @@ const express = require("express");
 const { body, validationResult } = require("express-validator");
 const PetData = require("../models/petData");
 const Pet = require("../models/pet");
-const auth = require("../middleware/authMiddleware"); // THÊM DÒNG NÀY
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Submit pet data from ESP32 (public access) - GIU NGUYEN
 router.post(
   "/",
   [
@@ -45,13 +44,78 @@ router.post(
   }
 );
 
-// Get pet data - CHI OWNER MOI DUOC XEM
+router.post(
+  "/by-bluetooth",
+  [
+    body("macAddress").notEmpty().withMessage("MAC address is required"),
+    body("latitude").isFloat({ min: -90, max: 90 }),
+    body("longitude").isFloat({ min: -180, max: 180 }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array(),
+        });
+      }
+
+      const { macAddress, latitude, longitude, speed, batteryLevel } = req.body;
+
+      const pet = await Pet.findByMacAddress(macAddress);
+      if (!pet) {
+        return res.status(404).json({
+          success: false,
+          message: "No pet found with this Bluetooth device",
+        });
+      }
+
+      if (!pet.bluetoothDevice.isPaired) {
+        return res.status(400).json({
+          success: false,
+          message: "Bluetooth device is not paired",
+        });
+      }
+
+      const petData = new PetData({
+        petId: pet._id,
+        latitude,
+        longitude,
+        speed: speed || 0,
+        batteryLevel: batteryLevel || 100,
+        timestamp: new Date(),
+      });
+
+      await petData.save();
+
+      pet.lastSeen = new Date();
+      pet.deviceInfo.lastSeen = new Date();
+      await pet.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Pet data saved successfully",
+        data: {
+          petName: pet.name,
+          timestamp: petData.timestamp,
+        },
+      });
+    } catch (error) {
+      console.error("Bluetooth data error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  }
+);
+
 router.get("/pet/:petId", auth, async (req, res) => {
   try {
     const { petId } = req.params;
     const { start, end, limit = 1000 } = req.query;
 
-    // Check if pet exists and belongs to owner
     const pet = await Pet.findById(petId);
     if (!pet) {
       return res.status(404).json({
@@ -60,7 +124,6 @@ router.get("/pet/:petId", auth, async (req, res) => {
       });
     }
 
-    // PHAN QUYEN: chi owner moi duoc xem
     if (pet.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -68,7 +131,6 @@ router.get("/pet/:petId", auth, async (req, res) => {
       });
     }
 
-    // Build query
     let query = { petId };
     if (start || end) {
       query.timestamp = {};
@@ -93,12 +155,10 @@ router.get("/pet/:petId", auth, async (req, res) => {
   }
 });
 
-// Get latest pet data - CHI OWNER MOI DUOC XEM
 router.get("/pet/:petId/latest", auth, async (req, res) => {
   try {
     const { petId } = req.params;
 
-    // Check ownership
     const pet = await Pet.findById(petId);
     if (!pet) {
       return res.status(404).json({
@@ -118,34 +178,6 @@ router.get("/pet/:petId/latest", auth, async (req, res) => {
     res.json({
       success: true,
       data: latestData,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-});
-
-// Cac route con lai cung them auth tuong tu...
-// Get activity summary, statistics, timeline... deu them auth
-
-// Get all pet data (for debugging) - XOA HOAC THEM PHAN QUYEN
-router.get("/", auth, async (req, res) => {
-  try {
-    // CHI HIEN THI PET DATA CUA PET MA USER SO HUU
-    const userPets = await Pet.find({ owner: req.user._id });
-    const petIds = userPets.map((pet) => pet._id);
-
-    const data = await PetData.find({ petId: { $in: petIds } })
-      .limit(100)
-      .sort({ timestamp: -1 })
-      .populate("petId", "name");
-
-    res.json({
-      success: true,
-      count: data.length,
-      data,
     });
   } catch (error) {
     res.status(500).json({

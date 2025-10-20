@@ -5,7 +5,7 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS cho production - CHO PHÉP TẤT CẢ DOMAIN
+// CORS cho production
 app.use(
   cors({
     origin: "*",
@@ -20,11 +20,12 @@ app.use(express.json());
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/pets", require("./routes/petRoutes"));
 app.use("/api/petData", require("./routes/petDataRoutes"));
+app.use("/api/bluetooth", require("./routes/bluetoothRoutes"));
 
 // Health check route
 app.get("/", (req, res) => {
   res.json({
-    message: "Pet Tracker API is running on Render!",
+    message: "Pet Tracker API is running!",
     timestamp: new Date().toISOString(),
     database:
       mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",

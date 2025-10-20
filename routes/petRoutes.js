@@ -1,11 +1,10 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const Pet = require("../models/pet");
-const auth = require("../middleware/authMiddleware"); // THÊM DÒNG NÀY
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Get all pets for CURRENT USER (PHAN QUYEN)
 router.get("/my-pets", auth, async (req, res) => {
   try {
     const pets = await Pet.find({ owner: req.user._id });
@@ -23,32 +22,6 @@ router.get("/my-pets", auth, async (req, res) => {
   }
 });
 
-// Get all pets (public for demo) - XOA HOAC SUA
-router.get("/", async (req, res) => {
-  try {
-    // CHI HIEN THI PET CUA USER HIEN TAI NEU CO AUTH
-    const { userId } = req.query;
-    let query = {};
-
-    if (userId) {
-      query.owner = userId;
-    }
-
-    const pets = await Pet.find(query).populate("owner", "name email");
-    res.json({
-      success: true,
-      count: pets.length,
-      pets,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-});
-
-// Get single pet - CHI OWNER MOI DUOC XEM
 router.get("/:id", auth, async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id);
@@ -60,7 +33,6 @@ router.get("/:id", auth, async (req, res) => {
       });
     }
 
-    // PHAN QUYEN: chi owner moi duoc xem
     if (pet.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -68,11 +40,7 @@ router.get("/:id", auth, async (req, res) => {
       });
     }
 
-    const populatedPet = await Pet.findById(req.params.id).populate(
-      "owner",
-      "name email"
-    );
-    res.json({ success: true, pet: populatedPet });
+    res.json({ success: true, pet });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -81,18 +49,16 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// Create new pet - TU DONG GAN OWNER
 router.post(
   "/",
-  auth, // THEM AUTH
+  auth,
   [
     body("name").notEmpty().withMessage("Pet name is required"),
     body("species")
-      .isIn(["dog", "cat", "other"])
+      .isIn(["dog", "cat", "bird", "rabbit", "other"])
       .withMessage("Valid species is required"),
     body("breed").notEmpty().withMessage("Breed is required"),
     body("age").isInt({ min: 0 }).withMessage("Age must be a positive number"),
-    // XOA body("owner") vi se tu dong gan
   ],
   async (req, res) => {
     try {
@@ -104,7 +70,6 @@ router.post(
         });
       }
 
-      // TU DONG GAN OWNER TU AUTH
       const petData = {
         ...req.body,
         owner: req.user._id,
@@ -127,7 +92,6 @@ router.post(
   }
 );
 
-// Update pet - CHI OWNER MOI DUOC SUA
 router.put("/:id", auth, async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id);
@@ -139,7 +103,6 @@ router.put("/:id", auth, async (req, res) => {
       });
     }
 
-    // PHAN QUYEN: chi owner moi duoc sua
     if (pet.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -165,7 +128,6 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// Delete pet - CHI OWNER MOI DUOC XOA
 router.delete("/:id", auth, async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id);
@@ -177,7 +139,6 @@ router.delete("/:id", auth, async (req, res) => {
       });
     }
 
-    // PHAN QUYEN: chi owner moi duoc xoa
     if (pet.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,

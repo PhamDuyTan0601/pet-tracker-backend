@@ -4,7 +4,6 @@ const User = require("../models/user");
 
 const router = express.Router();
 
-// Register new user
 router.post(
   "/register",
   [
@@ -26,7 +25,6 @@ router.post(
 
       const { name, email, password } = req.body;
 
-      // Check if user exists
       let user = await User.findOne({ email });
       if (user) {
         return res.status(400).json({
@@ -35,7 +33,6 @@ router.post(
         });
       }
 
-      // Create new user
       user = new User({ name, email, password });
       await user.save();
 
@@ -58,7 +55,6 @@ router.post(
   }
 );
 
-// Login user (simple version - just check credentials)
 router.post(
   "/login",
   [
@@ -77,7 +73,6 @@ router.post(
 
       const { email, password } = req.body;
 
-      // Check if user exists
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({
@@ -86,7 +81,6 @@ router.post(
         });
       }
 
-      // Check password
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         return res.status(400).json({
@@ -114,7 +108,6 @@ router.post(
   }
 );
 
-// Get user by ID (public access for demo)
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
