@@ -1,50 +1,54 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
 
-// CORS cho production
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "userId", "Authorization"],
-  })
-);
-
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/pets", require("./routes/petRoutes"));
-app.use("/api/petData", require("./routes/petDataRoutes"));
+app.use("/api/pet-data", require("./routes/petDataRoutes"));
 app.use("/api/bluetooth", require("./routes/bluetoothRoutes"));
+app.use("/api/qr", require("./routes/qrRoutes"));
 
-// Health check route
-app.get("/", (req, res) => {
+// QR Code generation
+app.get("/api/qr/generate/:deviceId", (req, res) => {
+  const { deviceId } = req.params;
+
+  const qrData = {
+    deviceId: deviceId,
+    deviceName: `PetTracker_${deviceId}`,
+    pairingUrl: `${req.protocol}://${req.get("host")}/web/pair/${deviceId}`,
+  };
+
   res.json({
-    message: "Pet Tracker API is running!",
-    timestamp: new Date().toISOString(),
-    database:
-      mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+    success: true,
+    qrData: qrData,
   });
 });
 
-// MongoDB connection
+// Web routes
+app.get("/web", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/web/pair/:deviceId", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+const PORT = process.env.PORT || 10000;
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected Successfully"))
-  .catch((err) => console.log("❌ MongoDB Connection Error:", err));
+  .then(() => {
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
-
-app.use(express.static("public"));
-app.get("/web", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
-});
 module.exports = app;

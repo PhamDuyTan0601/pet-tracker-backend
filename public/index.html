@@ -3,91 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pet Tracker - Web App</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Pet Tracker - QR Code</title>
+    <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!-- Modal Đăng Nhập/Đăng Ký -->
-    <div id="authModal" class="modal modal--active">
-      <div class="modal__content">
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal active">
+      <div class="modal-content">
         <div class="auth-container">
           <h2>🐾 Pet Tracker</h2>
-          <p class="auth-subtitle">Đăng nhập để bắt đầu theo dõi thú cưng</p>
 
-          <!-- Form Đăng Nhập -->
+          <!-- Login Form -->
           <div id="loginForm" class="auth-form">
             <h3>Đăng Nhập</h3>
-            <div class="form-group">
-              <label for="loginEmail" class="form-label">Email:</label>
-              <input
-                type="email"
-                id="loginEmail"
-                class="form-input"
-                placeholder="email@example.com"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="loginPassword" class="form-label">Mật khẩu:</label>
-              <input
-                type="password"
-                id="loginPassword"
-                class="form-input"
-                placeholder="Nhập mật khẩu"
-                required
-              />
-            </div>
-            <button class="btn btn--primary btn--full" onclick="auth.login()">
-              <span class="btn__icon">🔐</span>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="Email"
+              class="form-input"
+            />
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="Mật khẩu"
+              class="form-input"
+            />
+            <button class="btn btn-primary" onclick="auth.login()">
               Đăng Nhập
             </button>
-            <p class="auth-switch">
+            <p>
               Chưa có tài khoản?
-              <a href="#" onclick="auth.showRegister()">Đăng ký ngay</a>
+              <a href="#" onclick="auth.showRegister()">Đăng ký</a>
             </p>
           </div>
 
-          <!-- Form Đăng Ký -->
+          <!-- Register Form -->
           <div id="registerForm" class="auth-form" style="display: none">
             <h3>Đăng Ký</h3>
-            <div class="form-group">
-              <label for="registerName" class="form-label">Họ tên:</label>
-              <input
-                type="text"
-                id="registerName"
-                class="form-input"
-                placeholder="Nguyễn Văn A"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="registerEmail" class="form-label">Email:</label>
-              <input
-                type="email"
-                id="registerEmail"
-                class="form-input"
-                placeholder="email@example.com"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="registerPassword" class="form-label">Mật khẩu:</label>
-              <input
-                type="password"
-                id="registerPassword"
-                class="form-input"
-                placeholder="Ít nhất 6 ký tự"
-                required
-              />
-            </div>
-            <button
-              class="btn btn--success btn--full"
-              onclick="auth.register()"
-            >
-              <span class="btn__icon">📝</span>
+            <input
+              type="text"
+              id="registerName"
+              placeholder="Họ tên"
+              class="form-input"
+            />
+            <input
+              type="email"
+              id="registerEmail"
+              placeholder="Email"
+              class="form-input"
+            />
+            <input
+              type="password"
+              id="registerPassword"
+              placeholder="Mật khẩu"
+              class="form-input"
+            />
+            <button class="btn btn-success" onclick="auth.register()">
               Đăng Ký
             </button>
-            <p class="auth-switch">
+            <p>
               Đã có tài khoản?
               <a href="#" onclick="auth.showLogin()">Đăng nhập</a>
             </p>
@@ -96,122 +70,56 @@
       </div>
     </div>
 
-    <!-- Main App (ẩn ban đầu) -->
+    <!-- Main App -->
     <div id="mainApp" class="container" style="display: none">
       <header class="header">
-        <div class="header__user">
-          <h1>🐾 Pet Tracker</h1>
-          <div class="user-info">
-            <span id="userName">Người dùng</span>
-            <button class="btn btn--danger btn--small" onclick="auth.logout()">
-              <span class="btn__icon">🚪</span>
-              Đăng xuất
-            </button>
-          </div>
+        <h1>🐾 Pet Tracker</h1>
+        <div class="user-info">
+          <span id="userName">User</span>
+          <button class="btn btn-danger" onclick="auth.logout()">
+            Đăng xuất
+          </button>
         </div>
-        <p>Theo dõi thú cưng của bạn mọi lúc, mọi nơi</p>
       </header>
 
-      <!-- Phần còn lại giữ nguyên -->
-      <div id="status" class="status status--disconnected">
-        <div class="status__icon">🔴</div>
-        <div class="status__text">Chưa kết nối Bluetooth</div>
-      </div>
-
-      <div class="control-panel">
-        <button
-          id="scanBtn"
-          class="btn btn--primary"
-          onclick="bluetooth.scanDevices()"
-        >
-          <span class="btn__icon">🔍</span>
-          Quét Thiết Bị
-        </button>
-        <button
-          id="connectBtn"
-          class="btn btn--success"
-          onclick="bluetooth.connectToDevice()"
-          disabled
-        >
-          <span class="btn__icon">📱</span>
-          Kết Nối
-        </button>
-        <button
-          id="disconnectBtn"
-          class="btn btn--danger"
-          onclick="bluetooth.disconnectDevice()"
-          disabled
-        >
-          <span class="btn__icon">❌</span>
-          Ngắt Kết Nối
-        </button>
-      </div>
-
-      <!-- Các phần khác giữ nguyên -->
-      <div id="devicesSection" class="section">
-        <h2 class="section__title">📱 Thiết Bị Bluetooth</h2>
-        <div id="devicesList" class="devices-list"></div>
-      </div>
-
-      <div id="pairingPanel" class="panel panel--pairing" style="display: none">
-        <h2 class="panel__title">🔑 Pairing Thiết Bị</h2>
-        <div id="pairingInfo" class="pairing-info"></div>
-        <div class="form-group">
-          <label for="pairingCodeInput" class="form-label">Mã Pairing:</label>
-          <input
-            type="text"
-            id="pairingCodeInput"
-            class="form-input"
-            placeholder="Nhập mã pairing..."
-          />
-        </div>
-        <div class="form-group">
-          <label for="petSelect" class="form-label">Chọn Pet:</label>
-          <select id="petSelect" class="form-select"></select>
-        </div>
-        <button class="btn btn--success" onclick="bluetooth.confirmPairing()">
-          <span class="btn__icon">✅</span>
-          Xác Nhận Pairing
-        </button>
-      </div>
-
-      <div id="dataPanel" class="panel panel--data" style="display: none">
-        <h2 class="panel__title">📍 Dữ Liệu Theo Dõi</h2>
-        <div id="petData" class="pet-data"></div>
-        <div class="control-panel">
-          <button class="btn btn--info" onclick="bluetooth.requestData()">
-            <span class="btn__icon">🔄</span>
-            Lấy Dữ Liệu Mới
-          </button>
+      <!-- Connection Options -->
+      <div class="section">
+        <h2>📱 Kết Nối Thiết Bị</h2>
+        <div class="connection-options">
+          <div class="connection-card" onclick="qrManager.scanQR()">
+            <h3>📷 Quét QR Code</h3>
+            <p>Quét mã QR trên thiết bị</p>
+          </div>
+          <div class="connection-card" onclick="bluetooth.scanDevices()">
+            <h3>🔍 Tìm Thiết Bị</h3>
+            <p>Kết nối thủ công qua Bluetooth</p>
+          </div>
         </div>
       </div>
 
-      <div id="petsSection" class="section">
-        <h2 class="section__title">🐕 Danh Sách Pet</h2>
-        <div id="petsList" class="pets-list"></div>
-        <div class="control-panel">
-          <button
-            class="btn btn--primary"
-            onclick="petManager.showCreatePetForm()"
-          >
-            <span class="btn__icon">➕</span>
-            Thêm Pet Mới
-          </button>
-        </div>
+      <!-- Pets List -->
+      <div class="section">
+        <h2>🐕 Danh Sách Pet</h2>
+        <div id="petsList"></div>
+        <button class="btn btn-primary" onclick="petManager.showCreateForm()">
+          ➕ Thêm Pet
+        </button>
       </div>
 
-      <!-- Loading overlay -->
-      <div id="loadingOverlay" class="loading-overlay" style="display: none">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Đang xử lý...</div>
+      <!-- Device Data -->
+      <div id="dataPanel" class="section" style="display: none">
+        <h2>📍 Dữ Liệu Theo Dõi</h2>
+        <div id="petData"></div>
       </div>
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/bluetooth.js"></script>
     <script src="js/petManager.js"></script>
+    <script src="js/qrManager.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

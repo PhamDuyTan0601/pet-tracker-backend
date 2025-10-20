@@ -1,144 +1,106 @@
-// js/petManager.js
 class PetManager {
   constructor() {
     this.pets = [];
   }
 
-  // Hiển thị form tạo pet mới
-  showCreatePetForm() {
-    const formHTML = `
-            <div class="panel panel--pairing">
-                <h3>➕ Thêm Pet Mới</h3>
-                <div class="form-group">
-                    <label class="form-label">Tên pet:</label>
-                    <input type="text" id="newPetName" class="form-input" placeholder="Tên pet...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Loài:</label>
-                    <select id="newPetSpecies" class="form-select">
+  async loadPets() {
+    try {
+      const response = await fetch("/api/pets/my-pets", {
+        headers: { userId: auth.userId },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.pets = result.pets;
+        this.displayPets();
+        return this.pets;
+      }
+    } catch (error) {
+      console.error("Error loading pets:", error);
+    }
+    return [];
+  }
+
+  displayPets() {
+    const petsList = document.getElementById("petsList");
+
+    if (this.pets.length === 0) {
+      petsList.innerHTML = "<p>Chưa có pet nào. Hãy tạo pet mới!</p>";
+      return;
+    }
+
+    petsList.innerHTML = this.pets
+      .map(
+        (pet) => `
+            <div class="pet-card">
+                <h4>${pet.name} (${pet.species})</h4>
+                <p>Giống: ${pet.breed} - Tuổi: ${pet.age}</p>
+                <p>Bluetooth: ${
+                  pet.bluetoothDevice?.isPaired
+                    ? "✅ Đã kết nối"
+                    : "❌ Chưa kết nối"
+                }</p>
+                ${
+                  pet.bluetoothDevice?.macAddress
+                    ? `<p>Device: ${pet.bluetoothDevice.macAddress}</p>`
+                    : ""
+                }
+            </div>
+        `
+      )
+      .join("");
+  }
+
+  showCreateForm() {
+    const html = `
+            <div class="modal active">
+                <div class="modal-content">
+                    <h3>➕ Thêm Pet Mới</h3>
+                    <input type="text" id="petName" placeholder="Tên pet" class="form-input">
+                    <select id="petSpecies" class="form-input">
                         <option value="dog">Chó</option>
                         <option value="cat">Mèo</option>
                         <option value="bird">Chim</option>
                         <option value="rabbit">Thỏ</option>
-                        <option value="other">Khác</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Giống:</label>
-                    <input type="text" id="newPetBreed" class="form-input" placeholder="Giống...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tuổi:</label>
-                    <input type="number" id="newPetAge" class="form-input" placeholder="Tuổi..." min="0" max="50">
-                </div>
-                <div class="control-panel">
-                    <button class="btn btn--success" onclick="petManager.createPet()">
-                        <span class="btn__icon">✅</span>
-                        Tạo Pet
-                    </button>
-                    <button class="btn btn--danger" onclick="petManager.hideCreatePetForm()">
-                        <span class="btn__icon">❌</span>
-                        Hủy
-                    </button>
+                    <input type="text" id="petBreed" placeholder="Giống" class="form-input">
+                    <input type="number" id="petAge" placeholder="Tuổi" class="form-input">
+                    <button class="btn btn-success" onclick="petManager.createPet()">Tạo Pet</button>
+                    <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Hủy</button>
                 </div>
             </div>
         `;
 
-    // Thêm form vào danh sách pets
-    document
-      .getElementById("petsList")
-      .insertAdjacentHTML("afterbegin", formHTML);
+    document.body.insertAdjacentHTML("beforeend", html);
   }
 
-  // Ẩn form tạo pet
-  hideCreatePetForm() {
-    const form = document.querySelector("#petsList .panel");
-    if (form) {
-      form.remove();
-    }
-  }
-
-  // Tạo pet mới
   async createPet() {
-    const name = document.getElementById("newPetName").value;
-    const species = document.getElementById("newPetSpecies").value;
-    const breed = document.getElementById("newPetBreed").value;
-    const age = document.getElementById("newPetAge").value;
-
-    if (!name || !species || !breed || !age) {
-      ui.showNotification("Vui lòng điền đầy đủ thông tin", "error");
-      return;
-    }
+    const name = document.getElementById("petName").value;
+    const species = document.getElementById("petSpecies").value;
+    const breed = document.getElementById("petBreed").value;
+    const age = document.getElementById("petAge").value;
 
     try {
-      ui.showLoading(true);
-
       const response = await fetch("/api/pets", {
         method: "POST",
         headers: auth.getAuthHeaders(),
-        body: JSON.stringify({
-          name,
-          species,
-          breed,
-          age: parseInt(age),
-        }),
+        body: JSON.stringify({ name, species, breed, age: parseInt(age) }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        ui.showNotification(`Đã tạo pet ${name} thành công!`, "success");
-        this.hideCreatePetForm();
-
-        // Reload danh sách pets
-        if (window.bluetooth) {
-          await window.bluetooth.loadPets();
-        }
+        ui.showNotification("Đã tạo pet thành công!", "success");
+        document.querySelector(".modal").remove();
+        this.loadPets();
       } else {
-        ui.showNotification(result.message || "Tạo pet thất bại", "error");
+        ui.showNotification(result.message, "error");
       }
     } catch (error) {
-      ui.showNotification("Lỗi kết nối server", "error");
-      console.error("Create pet error:", error);
-    } finally {
-      ui.showLoading(false);
-    }
-  }
-
-  // Xóa pet
-  async deletePet(petId) {
-    if (!confirm("Bạn có chắc muốn xóa pet này?")) {
-      return;
-    }
-
-    try {
-      ui.showLoading(true);
-
-      const response = await fetch(`/api/pets/${petId}`, {
-        method: "DELETE",
-        headers: auth.getAuthHeaders(),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        ui.showNotification("Đã xóa pet thành công!", "success");
-
-        // Reload danh sách pets
-        if (window.bluetooth) {
-          await window.bluetooth.loadPets();
-        }
-      } else {
-        ui.showNotification(result.message || "Xóa pet thất bại", "error");
-      }
-    } catch (error) {
-      ui.showNotification("Lỗi kết nối server", "error");
-      console.error("Delete pet error:", error);
-    } finally {
-      ui.showLoading(false);
+      ui.showNotification("Lỗi tạo pet", "error");
     }
   }
 }
 
-// Khởi tạo Pet manager global
 const petManager = new PetManager();
