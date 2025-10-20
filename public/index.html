@@ -7,19 +7,117 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="container">
+    <!-- Modal Đăng Nhập/Đăng Ký -->
+    <div id="authModal" class="modal modal--active">
+      <div class="modal__content">
+        <div class="auth-container">
+          <h2>🐾 Pet Tracker</h2>
+          <p class="auth-subtitle">Đăng nhập để bắt đầu theo dõi thú cưng</p>
+
+          <!-- Form Đăng Nhập -->
+          <div id="loginForm" class="auth-form">
+            <h3>Đăng Nhập</h3>
+            <div class="form-group">
+              <label for="loginEmail" class="form-label">Email:</label>
+              <input
+                type="email"
+                id="loginEmail"
+                class="form-input"
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="loginPassword" class="form-label">Mật khẩu:</label>
+              <input
+                type="password"
+                id="loginPassword"
+                class="form-input"
+                placeholder="Nhập mật khẩu"
+                required
+              />
+            </div>
+            <button class="btn btn--primary btn--full" onclick="auth.login()">
+              <span class="btn__icon">🔐</span>
+              Đăng Nhập
+            </button>
+            <p class="auth-switch">
+              Chưa có tài khoản?
+              <a href="#" onclick="auth.showRegister()">Đăng ký ngay</a>
+            </p>
+          </div>
+
+          <!-- Form Đăng Ký -->
+          <div id="registerForm" class="auth-form" style="display: none">
+            <h3>Đăng Ký</h3>
+            <div class="form-group">
+              <label for="registerName" class="form-label">Họ tên:</label>
+              <input
+                type="text"
+                id="registerName"
+                class="form-input"
+                placeholder="Nguyễn Văn A"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="registerEmail" class="form-label">Email:</label>
+              <input
+                type="email"
+                id="registerEmail"
+                class="form-input"
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="registerPassword" class="form-label">Mật khẩu:</label>
+              <input
+                type="password"
+                id="registerPassword"
+                class="form-input"
+                placeholder="Ít nhất 6 ký tự"
+                required
+              />
+            </div>
+            <button
+              class="btn btn--success btn--full"
+              onclick="auth.register()"
+            >
+              <span class="btn__icon">📝</span>
+              Đăng Ký
+            </button>
+            <p class="auth-switch">
+              Đã có tài khoản?
+              <a href="#" onclick="auth.showLogin()">Đăng nhập</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App (ẩn ban đầu) -->
+    <div id="mainApp" class="container" style="display: none">
       <header class="header">
-        <h1>🐾 Pet Tracker Web App</h1>
+        <div class="header__user">
+          <h1>🐾 Pet Tracker</h1>
+          <div class="user-info">
+            <span id="userName">Người dùng</span>
+            <button class="btn btn--danger btn--small" onclick="auth.logout()">
+              <span class="btn__icon">🚪</span>
+              Đăng xuất
+            </button>
+          </div>
+        </div>
         <p>Theo dõi thú cưng của bạn mọi lúc, mọi nơi</p>
       </header>
 
-      <!-- Trạng thái kết nối -->
+      <!-- Phần còn lại giữ nguyên -->
       <div id="status" class="status status--disconnected">
         <div class="status__icon">🔴</div>
         <div class="status__text">Chưa kết nối Bluetooth</div>
       </div>
 
-      <!-- Panel điều khiển -->
       <div class="control-panel">
         <button
           id="scanBtn"
@@ -49,13 +147,12 @@
         </button>
       </div>
 
-      <!-- Danh sách thiết bị -->
+      <!-- Các phần khác giữ nguyên -->
       <div id="devicesSection" class="section">
         <h2 class="section__title">📱 Thiết Bị Bluetooth</h2>
         <div id="devicesList" class="devices-list"></div>
       </div>
 
-      <!-- Panel pairing -->
       <div id="pairingPanel" class="panel panel--pairing" style="display: none">
         <h2 class="panel__title">🔑 Pairing Thiết Bị</h2>
         <div id="pairingInfo" class="pairing-info"></div>
@@ -78,7 +175,6 @@
         </button>
       </div>
 
-      <!-- Dữ liệu pet -->
       <div id="dataPanel" class="panel panel--data" style="display: none">
         <h2 class="panel__title">📍 Dữ Liệu Theo Dõi</h2>
         <div id="petData" class="pet-data"></div>
@@ -90,10 +186,18 @@
         </div>
       </div>
 
-      <!-- Danh sách pet -->
       <div id="petsSection" class="section">
         <h2 class="section__title">🐕 Danh Sách Pet</h2>
         <div id="petsList" class="pets-list"></div>
+        <div class="control-panel">
+          <button
+            class="btn btn--primary"
+            onclick="petManager.showCreatePetForm()"
+          >
+            <span class="btn__icon">➕</span>
+            Thêm Pet Mới
+          </button>
+        </div>
       </div>
 
       <!-- Loading overlay -->
@@ -104,8 +208,10 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/auth.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/bluetooth.js"></script>
+    <script src="js/petManager.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

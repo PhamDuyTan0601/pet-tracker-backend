@@ -369,3 +369,121 @@ body {
 .mb-20 {
   margin-bottom: 20px;
 }
+
+/* Auth Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal__content {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+}
+
+.auth-container h2 {
+  text-align: center;
+  color: #4facfe;
+  margin-bottom: 10px;
+  font-size: 2em;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #6c757d;
+  margin-bottom: 30px;
+}
+
+.auth-form h3 {
+  color: #495057;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.auth-switch a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+.btn--full {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn--small {
+  padding: 8px 15px;
+  font-size: 12px;
+}
+
+/* Header User Info */
+.header__user {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info span {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Pet Card Actions */
+.pet-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pet-actions .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Responsive Auth */
+@media (max-width: 768px) {
+  .modal__content {
+    padding: 20px;
+    margin: 20px;
+  }
+
+  .header__user {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .user-info {
+    justify-content: center;
+  }
+}
