@@ -36,14 +36,21 @@ class PetManager {
             <div class="pet-card">
                 <h4>${pet.name} (${pet.species})</h4>
                 <p>Giống: ${pet.breed} - Tuổi: ${pet.age}</p>
-                <p>Bluetooth: ${
+                <p>Kết nối: ${
                   pet.bluetoothDevice?.isPaired
-                    ? "✅ Đã kết nối"
+                    ? "✅ Đã kết nối WiFi"
                     : "❌ Chưa kết nối"
                 }</p>
                 ${
                   pet.bluetoothDevice?.macAddress
-                    ? `<p>Device: ${pet.bluetoothDevice.macAddress}</p>`
+                    ? `<p>Device ID: ${pet.bluetoothDevice.macAddress}</p>`
+                    : ""
+                }
+                ${
+                  pet.lastSeen
+                    ? `<p>Lần cuối: ${new Date(
+                        pet.lastSeen
+                      ).toLocaleString()}</p>`
                     : ""
                 }
             </div>

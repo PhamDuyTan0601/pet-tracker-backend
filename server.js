@@ -12,17 +12,25 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/pets", require("./routes/petRoutes"));
 app.use("/api/pet-data", require("./routes/petDataRoutes"));
-app.use("/api/bluetooth", require("./routes/bluetoothRoutes"));
 app.use("/api/qr", require("./routes/qrRoutes"));
+app.use("/api/wifi-devices", require("./routes/wifiDeviceRoutes")); // THÊM DÒNG NÀY
 
-// QR Code generation
+// QR Code generation - CẬP NHẬT ĐỂ HỖ TRỢ WIFI
 app.get("/api/qr/generate/:deviceId", (req, res) => {
   const { deviceId } = req.params;
 
   const qrData = {
+    type: "pet_tracker_wifi",
     deviceId: deviceId,
     deviceName: `PetTracker_${deviceId}`,
-    pairingUrl: `${req.protocol}://${req.get("host")}/web/pair/${deviceId}`,
+    wifiConfig: {
+      ssid: "PetTracker_Network",
+      password: "pet123456",
+      encryption: "WPA2",
+    },
+    serverUrl: `${req.protocol}://${req.get("host")}`,
+    pairingUrl: `${req.protocol}://${req.get("host")}/api/wifi-devices/pair`,
+    timestamp: new Date().toISOString(),
   };
 
   res.json({

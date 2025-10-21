@@ -69,12 +69,16 @@ class UI {
 
     petData.innerHTML = `
             <div class="pet-card">
-                <h4>📍 Vị Trí Hiện Tại</h4>
-                <p>Kinh độ: ${data.longitude.toFixed(6)}</p>
-                <p>Vĩ độ: ${data.latitude.toFixed(6)}</p>
-                <p>Tốc độ: ${data.speed.toFixed(1)} km/h</p>
-                <p>Pin: ${Math.round(data.battery)}%</p>
-                <p>Cập nhật: ${new Date().toLocaleTimeString()}</p>
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                    <h4>📍 Vị Trí Hiện Tại</h4>
+                    <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">WiFi 📶</span>
+                </div>
+                <p><strong>Thiết bị:</strong> ${data.deviceId}</p>
+                <p><strong>Kinh độ:</strong> ${data.longitude.toFixed(6)}</p>
+                <p><strong>Vĩ độ:</strong> ${data.latitude.toFixed(6)}</p>
+                <p><strong>Tốc độ:</strong> ${data.speed.toFixed(1)} km/h</p>
+                <p><strong>Pin:</strong> ${Math.round(data.battery)}%</p>
+                <p><strong>Cập nhật:</strong> ${new Date().toLocaleTimeString()}</p>
             </div>
         `;
   }
