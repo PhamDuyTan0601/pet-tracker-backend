@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pet Tracker - WiFi</title>
+    <title>Pet Tracker - WiFi Thực Tế</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -11,7 +11,7 @@
     <div id="authModal" class="modal active">
       <div class="modal-content">
         <div class="auth-container">
-          <h2>🐾 Pet Tracker</h2>
+          <h2>🐾 Pet Tracker WiFi</h2>
 
           <!-- Login Form -->
           <div id="loginForm" class="auth-form">
@@ -73,7 +73,7 @@
     <!-- Main App -->
     <div id="mainApp" class="container" style="display: none">
       <header class="header">
-        <h1>🐾 Pet Tracker WiFi</h1>
+        <h1>🐾 Pet Tracker WiFi - THỰC TẾ</h1>
         <div class="user-info">
           <span id="userName">User</span>
           <button class="btn btn-danger" onclick="auth.logout()">
@@ -82,17 +82,50 @@
         </div>
       </header>
 
+      <!-- Connection Status -->
+      <div
+        id="connectionStatus"
+        class="section"
+        style="
+          display: none;
+          background: linear-gradient(135deg, #e8f5e8, #d4edda);
+          border-left: 4px solid #28a745;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div>
+            <h3>📡 Đang Kết Nối Thiết Bị Thực</h3>
+            <p id="statusText" style="margin: 0">
+              Đang nhận dữ liệu GPS thực tế từ ESP32
+            </p>
+          </div>
+          <div style="text-align: right">
+            <p id="deviceIdStatus" style="margin: 0; font-weight: bold"></p>
+            <p
+              id="lastUpdate"
+              style="margin: 0; font-size: 12px; color: #666"
+            ></p>
+          </div>
+        </div>
+      </div>
+
       <!-- Connection Options -->
       <div class="section">
-        <h2>📶 Kết Nối Thiết Bị WiFi</h2>
+        <h2>📶 Kết Nối Thiết Bị WiFi THỰC TẾ</h2>
         <div class="connection-options">
           <div class="connection-card" onclick="wifiManager.scanWifiQR()">
             <h3>📷 Quét QR WiFi</h3>
-            <p>Quét mã QR từ thiết bị</p>
+            <p>Quét mã QR từ thiết bị thực</p>
           </div>
           <div class="connection-card" onclick="wifiManager.showWifiForm()">
-            <h3>⚙️ Cấu Hình WiFi</h3>
-            <p>Nhập thông tin thủ công</p>
+            <h3>⚙️ Kết Nối Thủ Công</h3>
+            <p>Nhập Device ID thực tế</p>
           </div>
         </div>
         <div style="margin-top: 15px; text-align: center">
@@ -111,14 +144,67 @@
         <h2>🐕 Danh Sách Pet</h2>
         <div id="petsList"></div>
         <button class="btn btn-primary" onclick="petManager.showCreateForm()">
-          ➕ Thêm Pet
+          ➕ Thêm Pet Mới
         </button>
       </div>
 
       <!-- Device Data -->
       <div id="dataPanel" class="section" style="display: none">
-        <h2>📍 Dữ Liệu Theo Dõi Thời Gian Thực</h2>
+        <h2>📍 Theo Dõi Thời Gian Thực - DỮ LIỆU THỰC</h2>
         <div id="petData"></div>
+        <div id="realTimeStats" style="margin-top: 15px">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 10px;
+              text-align: center;
+            "
+          >
+            <div style="background: #e8f5e8; padding: 10px; border-radius: 8px">
+              <div style="font-size: 12px; color: #666">Vệ tinh</div>
+              <div
+                style="font-size: 18px; font-weight: bold"
+                id="satelliteCount"
+              >
+                0
+              </div>
+            </div>
+            <div style="background: #fff3cd; padding: 10px; border-radius: 8px">
+              <div style="font-size: 12px; color: #666">Độ chính xác</div>
+              <div
+                style="font-size: 18px; font-weight: bold"
+                id="accuracyValue"
+              >
+                0m
+              </div>
+            </div>
+            <div style="background: #d1ecf1; padding: 10px; border-radius: 8px">
+              <div style="font-size: 12px; color: #666">Cập nhật</div>
+              <div style="font-size: 18px; font-weight: bold" id="updateTime">
+                --:--
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device Management -->
+      <div class="section">
+        <h2>🔧 Quản Lý Thiết Bị</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px">
+          <div class="connection-card" onclick="wifiManager.showDeviceStatus()">
+            <h3>📊 Trạng Thái Thiết Bị</h3>
+            <p>Kiểm tra thiết bị đang hoạt động</p>
+          </div>
+          <div
+            class="connection-card"
+            onclick="wifiManager.showRegisteredDevices()"
+          >
+            <h3>📋 Thiết Bị Đã Đăng Ký</h3>
+            <p>Xem danh sách thiết bị</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -129,7 +215,6 @@
     <script src="js/petManager.js"></script>
     <script src="js/qrManager.js"></script>
     <script src="js/wifiManager.js"></script>
-    <!-- THÊM DÒNG NÀY -->
     <script src="js/app.js"></script>
   </body>
 </html>

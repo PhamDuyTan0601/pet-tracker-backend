@@ -1,11 +1,13 @@
+// File: wifiManager.js - PHIÊN BẢN THỰC TẾ
 class WifiManager {
   constructor() {
     this.connectedDevice = null;
     this.isConnected = false;
     this.dataInterval = null;
+    this.lastData = null;
   }
 
-  // Quét QR code WiFi
+  // Quét QR code WiFi - THỰC TẾ
   scanWifiQR() {
     if (!auth.userId) {
       ui.showNotification("Vui lòng đăng nhập", "error");
@@ -21,48 +23,12 @@ class WifiManager {
             <div style="text-align: center;">
               <div style="font-size: 48px;">📱</div>
               <p>Camera sẽ được kích hoạt tại đây</p>
-              <p style="font-size: 12px; color: #666;">(Đang giả lập cho demo)</p>
             </div>
           </div>
-          <p>Hoặc nhập thông tin thủ công:</p>
-          <button class="btn btn-primary" onclick="wifiManager.showWifiForm()">Nhập Thủ Công</button>
-          <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Hủy</button>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML("beforeend", html);
-
-    // Giả lập quét QR thành công sau 3 giây
-    setTimeout(() => {
-      document.querySelector(".modal")?.remove();
-      this.handleScannedQR({
-        deviceId: "PT" + Math.random().toString(36).substr(2, 4).toUpperCase(),
-        wifiConfig: {
-          ssid: "PetTracker_Network",
-          password: "pet123456",
-        },
-        serverUrl: "https://pet-tracker-md3r.onrender.com",
-      });
-    }, 3000);
-  }
-
-  // Hiển thị form cấu hình WiFi
-  showWifiForm() {
-    document.querySelector(".modal")?.remove();
-
-    const html = `
-      <div class="modal active">
-        <div class="modal-content">
-          <h3>⚙️ Cấu Hình WiFi</h3>
-          <input type="text" id="wifiSSID" placeholder="Tên WiFi (SSID)" class="form-input" value="PetTracker_Network">
-          <input type="password" id="wifiPassword" placeholder="Mật khẩu WiFi" class="form-input" value="pet123456">
-          <input type="text" id="deviceId" placeholder="ID Thiết bị (VD: PT001)" class="form-input" value="PT${Math.random()
-            .toString(36)
-            .substr(2, 4)
-            .toUpperCase()}">
+          <p>Hoặc nhập Device ID thực tế:</p>
+          <input type="text" id="manualDeviceId" placeholder="PT001, PT002..." class="form-input">
           <div style="display: flex; gap: 10px;">
-            <button class="btn btn-success" onclick="wifiManager.connectToWifi()">Kết Nối</button>
+            <button class="btn btn-primary" onclick="wifiManager.connectManual()">Kết Nối</button>
             <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Hủy</button>
           </div>
         </div>
@@ -72,86 +38,88 @@ class WifiManager {
     document.body.insertAdjacentHTML("beforeend", html);
   }
 
-  // Xử lý QR code đã quét
-  handleScannedQR(qrData) {
-    ui.showNotification(`✅ Đã quét thiết bị: ${qrData.deviceId}`, "success");
-
-    // Hiển thị thông tin WiFi
-    const html = `
-      <div class="modal active">
-        <div class="modal-content">
-          <h3>✅ Đã Quét Thành Công</h3>
-          <div class="wifi-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-            <p><strong>Thiết bị:</strong> ${qrData.deviceId}</p>
-            <p><strong>WiFi SSID:</strong> ${qrData.wifiConfig.ssid}</p>
-            <p><strong>Mật khẩu:</strong> *******</p>
-            <p><strong>Server:</strong> ${qrData.serverUrl}</p>
-          </div>
-          <p>Hãy cấu hình thiết bị với thông tin trên và chọn pet để kết nối:</p>
-          <select id="petSelectWifi" class="form-input">
-            <option value="">-- Chọn Pet --</option>
-          </select>
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn btn-success" onclick="wifiManager.pairDevice('${qrData.deviceId}')">Kết Nối Ngay</button>
-            <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Hủy</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML("beforeend", html);
-    this.loadPetsForSelection();
-  }
-
-  // Kết nối WiFi thủ công
-  async connectToWifi() {
-    const ssid = document.getElementById("wifiSSID").value;
-    const password = document.getElementById("wifiPassword").value;
-    const deviceId = document.getElementById("deviceId").value;
-
-    if (!ssid || !password || !deviceId) {
-      ui.showNotification("Vui lòng điền đầy đủ thông tin", "error");
+  // Kết nối thủ công với Device ID thực
+  async connectManual() {
+    const deviceId = document.getElementById("manualDeviceId").value;
+    if (!deviceId) {
+      ui.showNotification("Vui lòng nhập Device ID thực tế", "error");
       return;
     }
 
-    ui.showNotification(
-      `📡 Đang kết nối ${deviceId} đến WiFi ${ssid}...`,
-      "info"
-    );
-
-    document.querySelector(".modal")?.remove();
-
-    // Giả lập kết nối thành công
-    setTimeout(() => {
-      this.handleScannedQR({
-        deviceId: deviceId,
-        wifiConfig: { ssid, password },
-        serverUrl: "https://pet-tracker-md3r.onrender.com",
-      });
-    }, 2000);
+    await this.connectToDevice(deviceId);
   }
 
-  // Tải danh sách pet để chọn
-  async loadPetsForSelection() {
-    const pets = await petManager.loadPets();
-    const select = document.getElementById("petSelectWifi");
+  // Kết nối đến thiết bị thực tế
+  async connectToDevice(deviceId) {
+    try {
+      ui.showNotification(`🔍 Đang tìm thiết bị ${deviceId}...`, "info");
 
-    if (pets && pets.length > 0) {
-      select.innerHTML =
-        '<option value="">-- Chọn Pet --</option>' +
-        pets
-          .map(
-            (pet) =>
-              `<option value="${pet._id}">${pet.name} (${pet.species})</option>`
-          )
-          .join("");
-    } else {
-      select.innerHTML = '<option value="">Chưa có pet nào</option>';
+      // Kiểm tra thiết bị có tồn tại không
+      const deviceExists = await this.checkDeviceExists(deviceId);
+      if (!deviceExists) {
+        ui.showNotification(
+          "❌ Thiết bị không tồn tại hoặc chưa gửi dữ liệu",
+          "error"
+        );
+        return;
+      }
+
+      // Hiển thị chọn pet
+      await this.showPetSelection(deviceId);
+    } catch (error) {
+      ui.showNotification("Lỗi kết nối: " + error.message, "error");
     }
   }
 
-  // Ghép nối thiết bị với pet
-  async pairDevice(deviceId) {
+  // Kiểm tra thiết bị có tồn tại trong database không
+  async checkDeviceExists(deviceId) {
+    try {
+      const response = await fetch(`/api/wifi-devices/check/${deviceId}`);
+      const result = await response.json();
+      return result.exists;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Hiển thị chọn pet cho thiết bị thực
+  async showPetSelection(deviceId) {
+    document.querySelector(".modal")?.remove();
+
+    const pets = await petManager.loadPets();
+
+    const html = `
+      <div class="modal active">
+        <div class="modal-content">
+          <h3>🔗 Kết Nối Thiết Bị Thực</h3>
+          <div class="wifi-info">
+            <p><strong>Device ID:</strong> ${deviceId}</p>
+            <p><strong>Trạng thái:</strong> <span class="status-online">✅ Đang hoạt động</span></p>
+            <p><em>Thiết bị này sẽ gửi dữ liệu GPS thực tế</em></p>
+          </div>
+          <p>Chọn pet để kết nối:</p>
+          <select id="petSelectWifi" class="form-input">
+            <option value="">-- Chọn Pet --</option>
+            ${pets
+              .map(
+                (pet) =>
+                  `<option value="${pet._id}">${pet.name} (${pet.species})</option>`
+              )
+              .join("")}
+          </select>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-success" onclick="wifiManager.pairRealDevice('${deviceId}')">Kết Nối Thiết Bị Thực</button>
+            <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Hủy</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", html);
+  }
+
+  // Ghép nối thiết bị THỰC TẾ
+  async pairRealDevice(deviceId) {
     const petId = document.getElementById("petSelectWifi").value;
 
     if (!petId) {
@@ -160,9 +128,8 @@ class WifiManager {
     }
 
     try {
-      ui.showNotification("🔄 Đang ghép nối thiết bị...", "info");
+      ui.showNotification("🔄 Đang ghép nối thiết bị thực...", "info");
 
-      // Gọi API ghép nối WiFi
       const response = await fetch("/api/wifi-devices/pair", {
         method: "POST",
         headers: {
@@ -179,11 +146,11 @@ class WifiManager {
       const result = await response.json();
 
       if (result.success) {
-        ui.showNotification("✅ Kết nối WiFi thành công!", "success");
+        ui.showNotification("✅ Kết nối thiết bị thực thành công!", "success");
         document.querySelectorAll(".modal").forEach((modal) => modal.remove());
 
-        // Bắt đầu nhận dữ liệu
-        this.startReceivingData(deviceId);
+        // Bắt đầu theo dõi dữ liệu THỰC
+        this.startRealTimeMonitoring(deviceId, petId);
 
         // Load lại danh sách pet
         petManager.loadPets();
@@ -191,46 +158,81 @@ class WifiManager {
         ui.showNotification(result.message, "error");
       }
     } catch (error) {
-      ui.showNotification("❌ Lỗi kết nối đến server", "error");
+      ui.showNotification("❌ Lỗi kết nối server", "error");
     }
   }
 
-  // Bắt đầu nhận dữ liệu từ thiết bị WiFi
-  startReceivingData(deviceId) {
+  // Bắt đầu theo dõi dữ liệu THỰC TẾ từ ESP32
+  startRealTimeMonitoring(deviceId, petId) {
     this.connectedDevice = deviceId;
     this.isConnected = true;
 
-    ui.showNotification(`📡 Đang chờ dữ liệu từ ${deviceId}...`, "info");
+    ui.showNotification(
+      `📡 Đang theo dõi dữ liệu thực từ ${deviceId}...`,
+      "success"
+    );
 
     // Dừng interval cũ nếu có
     if (this.dataInterval) {
       clearInterval(this.dataInterval);
     }
 
-    // Giả lập nhận dữ liệu mỗi 5 giây
-    this.dataInterval = setInterval(() => {
+    // Lấy dữ liệu thực từ server mỗi 3 giây
+    this.dataInterval = setInterval(async () => {
       if (this.isConnected) {
-        this.handleReceivedData({
-          deviceId: deviceId,
-          type: "pet_data",
-          latitude: 10.8231 + (Math.random() - 0.5) * 0.01,
-          longitude: 106.6297 + (Math.random() - 0.5) * 0.01,
-          speed: Math.random() * 10,
-          battery: 80 + Math.random() * 20,
-          timestamp: new Date().toISOString(),
-        });
+        await this.fetchRealData(deviceId, petId);
       }
-    }, 5000);
+    }, 3000);
   }
 
-  // Xử lý dữ liệu nhận được
-  handleReceivedData(data) {
-    if (data.type === "pet_data") {
-      ui.showPetData(data);
-      ui.showNotification(
-        `📍 Nhận dữ liệu vị trí từ ${data.deviceId}`,
-        "success"
-      );
+  // Lấy dữ liệu THỰC TẾ từ server
+  async fetchRealData(deviceId, petId) {
+    try {
+      const response = await fetch(`/api/pet-data/pet/${petId}/latest`);
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const realData = result.data;
+
+        // Chỉ hiển thị nếu có dữ liệu mới
+        if (!this.lastData || this.lastData.timestamp !== realData.timestamp) {
+          this.handleRealData({
+            deviceId: deviceId,
+            type: "real_pet_data",
+            latitude: realData.latitude,
+            longitude: realData.longitude,
+            speed: realData.speed || 0,
+            battery: realData.batteryLevel || 85,
+            satellites: realData.satellites || 0,
+            accuracy: realData.accuracy || 5.0,
+            timestamp: realData.timestamp,
+          });
+
+          this.lastData = realData;
+        }
+      }
+    } catch (error) {
+      console.log("Chưa có dữ liệu thực từ ESP32");
+    }
+  }
+
+  // Xử lý dữ liệu THỰC nhận được
+  handleRealData(data) {
+    if (data.type === "real_pet_data") {
+      ui.showRealPetData(data);
+
+      // Chỉ thông báo khi có dữ liệu mới
+      const now = new Date();
+      const dataTime = new Date(data.timestamp);
+      const diffMinutes = (now - dataTime) / (1000 * 60);
+
+      if (diffMinutes < 5) {
+        // Dữ liệu trong 5 phút gần đây
+        ui.showNotification(
+          `📍 Nhận dữ liệu THỰC từ ${data.deviceId} - ${data.satellites} vệ tinh`,
+          "success"
+        );
+      }
     }
   }
 
@@ -238,13 +240,28 @@ class WifiManager {
   disconnect() {
     this.isConnected = false;
     this.connectedDevice = null;
+    this.lastData = null;
 
     if (this.dataInterval) {
       clearInterval(this.dataInterval);
       this.dataInterval = null;
     }
 
-    ui.showNotification("📴 Đã ngắt kết nối WiFi", "info");
+    ui.showNotification("📴 Đã ngắt kết nối thiết bị thực", "info");
+
+    // Ẩn panel data
+    document.getElementById("dataPanel").style.display = "none";
+  }
+
+  // Kiểm tra trạng thái thiết bị
+  async checkDeviceStatus(deviceId) {
+    try {
+      const response = await fetch(`/api/wifi-devices/status/${deviceId}`);
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      return { online: false, lastSeen: null };
+    }
   }
 }
 
